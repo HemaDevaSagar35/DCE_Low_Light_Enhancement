@@ -36,8 +36,8 @@ def spatial_consistency_loss(real_image, enhanced_image, local_region = 4):
         enhance_left_diff = torch.abs((enhance_x * left_kernel).sum(axis=-1))
 
         left_part = ((enhance_left_diff - real_left_diff)**2).sum()
-        print((enhance_left_diff - real_left_diff)**2)
-        print(left_part)
+        # print((enhance_left_diff - real_left_diff)**2)
+        # print(left_part)
         #j - j + 1 center - down
         down_kernel = torch.ones(2, 1, device=real_image.device)
         down_kernel[1,:] = -1.0
@@ -61,22 +61,78 @@ def spatial_consistency_loss(real_image, enhanced_image, local_region = 4):
 
         top_part = ((enhance_top_diff - real_top_diff)**2).sum()
 
-        loss_spa = (left_part + right_part + down_part + top_part)/(real_image_avg.shape[-2]*real_image_avg.shape[-1])
+        loss_spa = (left_part + right_part + down_part + top_part)/(real_image_avg.shape[0]*real_image_avg.shape[-2]*real_image_avg.shape[-1])
     
     return loss_spa
+
+def exposure_control_loss(enhanced_image, E = 0.6, local_region = 16):
+    '''
+    To restrain under-over-exposed regions
+    enhanced_image - N x 3 X image_size x image_size
+    '''
+    with torch.cuda.amp.autocast():
+        enhanced_image_avg = F.avg_pool2d(enhanced_image, local_region, stride=(local_region, local_region), padding=0, ceil_mode=True)
+        e_tensor = torch.ones(1, 3, 1, 1, device=enhanced_image.device)*E
+        loss_exp = torch.abs(enhanced_image_avg - e_tensor)
+    # print(loss_exp)
+    return loss_exp.mean()
+
+def color_consistency_loss(enhanced_image):
+    '''
+    To color consistency loss
+    '''
+    with torch.cuda.amp.autocast():
+        avg_image = enhanced_image.mean(axis=(2,3))
+        # print(avg_image)
+        r_g_residue = (avg_image[:,0] - avg_image[:,1])**2
+        g_b_residue = (avg_image[:,1] - avg_image[:,2])**2
+        r_b_residue = (avg_image[:,0] - avg_image[:,2])**2
+
+    return (r_g_residue + g_b_residue + r_b_residue).mean()
+
+def illumination_smoothness_loss(outputs):
+    '''
+    Smooth the illumination loss
+    '''
+    with torch.cuda.amp.autocast():
+        w_dir = torch.zeros_like(outputs, device=outputs.device)
+        w_dir[:,:,:,1:] = torch.abs(outputs[:,:,:,1:] - outputs[:,:,:,:-1])
+        # print(w_dir)
+        h_dir = torch.zeros_like(outputs, device=outputs.device)
+        h_dir[:,:,1:,:] = torch.abs(outputs[:,:,1:,:] - outputs[:,:,:-1,:])
+        # print(h_dir)
+        total_dir = (h_dir + w_dir)**2
+        # print(total_dir)
+    return total_dir.mean()
+
+
 
 
 if __name__ == '__main__':
     real_image = torch.tensor([[0.5, -0.3, -0.9, 1.0],[-0.22, 0.35, 0.51, 0.88],[1.0, 0.77, 0.44, -0.11],[0.22, -0.97, 0.23, 0.55]])
     enhanced_image = torch.tensor([[0.25, -0.13, -.9, 0.45],[-0.16, 0.15, 0.21, -0.48],[0.85, 0.71, 0.54, -0.21],[0.32, 0.07, -0.33, 0.15]])
-
+  
     real_image = real_image.unsqueeze(0)
     real_image = torch.cat([real_image, real_image, real_image], axis=0)
     real_image = real_image.unsqueeze(0)
+    real_image = torch.cat([real_image, real_image],axis=0)
 
     enhanced_image = enhanced_image.unsqueeze(0)
-    enhanced_image = torch.cat([enhanced_image, enhanced_image, enhanced_image], axis=0)
+    enhanced_image = torch.cat([enhanced_image, torch.ones_like(enhanced_image), enhanced_image], axis=0)
     enhanced_image = enhanced_image.unsqueeze(0)
-
+    enhanced_image = torch.cat([enhanced_image, enhanced_image], axis=0)
+    print(enhanced_image)
     c = spatial_consistency_loss(real_image, enhanced_image, local_region = 2)
     print(c)
+
+    print("#################################################")
+    l_exp = exposure_control_loss(enhanced_image, E = 0.6, local_region = 2)
+    print(l_exp)
+    print("#################################################")
+    l_col = color_consistency_loss(enhanced_image)
+    print(l_col)
+    print('#################################################')
+    l_ill = illumination_smoothness_loss(enhanced_image)
+    print(l_ill)
+
+
