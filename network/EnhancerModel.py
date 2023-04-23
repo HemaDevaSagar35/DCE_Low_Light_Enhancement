@@ -5,17 +5,35 @@ import torch
 import math
 import torch.nn.functional as F
 
+def init_weights(m):
+    if isinstance(m, nn.Conv2d):
+        torch.nn.init.normal_(m.weight, mean = 0.0, std=0.02)
+        m.bias.data.fill_(0.01)
+
 class DceNet(nn.Module):
     def __init__(self):
         super().__init__()
         
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=1, padding='same')  
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=1, padding='same')
+        init_weights(self.conv1)
+
         self.conv2 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding='same')
+        init_weights(self.conv2)
+
         self.conv3 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding='same')
+        init_weights(self.conv3)
+
         self.conv4 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding='same')
+        init_weights(self.conv4)
+
         self.conv5 = nn.Conv2d(64, 32, kernel_size=3, stride=1, padding='same')
+        init_weights(self.conv5)
+
         self.conv6 = nn.Conv2d(64, 32, kernel_size=3, stride=1, padding='same')
+        init_weights(self.conv6)
+
         self.conv7 = nn.Conv2d(64, 24, kernel_size=3, stride=1, padding='same')
+        init_weights(self.conv7)
     
     def enhance(self, alphas, x):
         output = x 
