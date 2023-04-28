@@ -39,25 +39,27 @@ def spatial_consistency_loss(real_image, enhanced_image, local_region = 4):
         # print((enhance_left_diff - real_left_diff)**2)
         # print(left_part)
         #j - j + 1 center - down
-        down_kernel = torch.ones(2, 1, device=real_image.device)
-        down_kernel[1,:] = -1.0
+        down_kernel = torch.ones(1, 2, device=real_image.device)
+        down_kernel[:,1] = -1.0
         down_kernel = down_kernel.unsqueeze(0).unsqueeze(0).unsqueeze(0)
 
         real_y = real_image_avg.unfold(-2, 2, 1)
         enhance_y = enhanced_image_avg.unfold(-2, 2, 1)
 
-        real_down_diff = torch.abs((real_y * down_kernel).sum(axis=-2))
-        enhance_down_diff = torch.abs((enhance_y*down_kernel).sum(axis=-2))
+        # print("shape of real_y is, ", real_y.shape)
+        # print("shape of down kernel is, ", down_kernel.shape)
+        real_down_diff = torch.abs((real_y * down_kernel).sum(axis=-1))
+        enhance_down_diff = torch.abs((enhance_y*down_kernel).sum(axis=-1))
 
         down_part = ((enhance_down_diff - real_down_diff)**2).sum()
 
         #j - j - 1 center - top
-        top_kernel = torch.ones(2, real_image_avg.shape[-1], device=real_image.device)
-        top_kernel[0,:] = -1.0
+        top_kernel = torch.ones(1, 2, device=real_image.device)
+        top_kernel[:,0] = -1.0
         top_kernel = top_kernel.unsqueeze(0).unsqueeze(0).unsqueeze(0)
 
-        real_top_diff = torch.abs((real_y * top_kernel).sum(axis=-2))
-        enhance_top_diff = torch.abs((real_y * top_kernel).sum(axis=-2))
+        real_top_diff = torch.abs((real_y * top_kernel).sum(axis=-1))
+        enhance_top_diff = torch.abs((real_y * top_kernel).sum(axis=-1))
 
         top_part = ((enhance_top_diff - real_top_diff)**2).sum()
 
