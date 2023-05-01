@@ -38,7 +38,8 @@ class DceNet(nn.Module):
     def enhance(self, alphas, x):
         output = x 
         for i in range(alphas.shape[1] // 3):
-            output = output + alphas[:,(3*i):(3*(i+1)),:,:]*output*(1 - output)
+            # output = output + alphas[:,(3*i):(3*(i+1)),:,:]*output*(1 - output)
+            output = output + alphas[:,(3*i):(3*(i+1)),:,:]*(torch.pow(output, 2)- output)
         return output
 
     def forward(self, x):

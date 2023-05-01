@@ -8,3 +8,4 @@ data
 models
 testing the data.ipynb
 __pycache__
+*.jpg

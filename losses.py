@@ -7,8 +7,11 @@ def spatial_consistency_loss(real_image, enhanced_image, local_region = 4):
    #TODO: need to be tested.
     with torch.cuda.amp.autocast():
         
-        real_image_avg = F.avg_pool2d(real_image, local_region, stride=(local_region, local_region), padding=0, ceil_mode=True)
-        enhanced_image_avg = F.avg_pool2d(enhanced_image, local_region, stride=(local_region, local_region), padding=0, ceil_mode=True)
+        real_image_avg = real_image.mean(axis=1, keepdim=True)
+        enhanced_image_avg = enhanced_image.mean(axis=1, keepdim=True)
+
+        real_image_avg = F.avg_pool2d(real_image_avg, local_region, stride=(local_region, local_region), padding=0, ceil_mode=True)
+        enhanced_image_avg = F.avg_pool2d(enhanced_image_avg, local_region, stride=(local_region, local_region), padding=0, ceil_mode=True)
 
         #i - (i+1) center - right
         # # x N x c x img x 2
@@ -64,6 +67,7 @@ def spatial_consistency_loss(real_image, enhanced_image, local_region = 4):
         top_part = ((enhance_top_diff - real_top_diff)**2).sum()
 
         loss_spa = (left_part + right_part + down_part + top_part)/(real_image_avg.shape[0]*real_image_avg.shape[-2]*real_image_avg.shape[-1])
+        # loss_spa = (left_part + right_part + down_part + top_part)/(3.0)
     
     return loss_spa
 
@@ -73,9 +77,10 @@ def exposure_control_loss(enhanced_image, E = 0.6, local_region = 16):
     enhanced_image - N x 3 X image_size x image_size
     '''
     with torch.cuda.amp.autocast():
-        enhanced_image_avg = F.avg_pool2d(enhanced_image, local_region, stride=(local_region, local_region), padding=0, ceil_mode=True)
-        e_tensor = torch.ones(1, 3, 1, 1, device=enhanced_image.device)*E
-        loss_exp = torch.abs(enhanced_image_avg - e_tensor)
+        enhanced_image_avg = enhanced_image.mean(axis=1, keepdim=True)
+        enhanced_image_avg = F.avg_pool2d(enhanced_image_avg, local_region, stride=(local_region, local_region), padding=0, ceil_mode=True)
+        e_tensor = torch.ones(1, 1, 1, 1, device=enhanced_image.device)*E
+        loss_exp = torch.pow(enhanced_image_avg - e_tensor, 2)
     # print(loss_exp)
     return loss_exp.mean()
 
@@ -90,22 +95,36 @@ def color_consistency_loss(enhanced_image):
         g_b_residue = (avg_image[:,1] - avg_image[:,2])**2
         r_b_residue = (avg_image[:,0] - avg_image[:,2])**2
 
-    return (r_g_residue + g_b_residue + r_b_residue).mean()
+    return torch.pow(r_g_residue + g_b_residue + r_b_residue, 0.5).mean()
+
+# def illumination_smoothness_loss(outputs):
+#     '''
+#     Smooth the illumination loss
+#     '''
+#     with torch.cuda.amp.autocast():
+#         w_dir = torch.zeros_like(outputs, device=outputs.device)
+#         w_dir[:,:,:,1:] = torch.abs(outputs[:,:,:,1:] - outputs[:,:,:,:-1])
+#         # print(w_dir)
+#         h_dir = torch.zeros_like(outputs, device=outputs.device)
+#         h_dir[:,:,1:,:] = torch.abs(outputs[:,:,1:,:] - outputs[:,:,:-1,:])
+#         # print(h_dir)
+#         total_dir = (h_dir + w_dir)**2
+#         # print(total_dir)
+#     return total_dir.mean()
 
 def illumination_smoothness_loss(outputs):
     '''
     Smooth the illumination loss
     '''
     with torch.cuda.amp.autocast():
-        w_dir = torch.zeros_like(outputs, device=outputs.device)
-        w_dir[:,:,:,1:] = torch.abs(outputs[:,:,:,1:] - outputs[:,:,:,:-1])
-        # print(w_dir)
-        h_dir = torch.zeros_like(outputs, device=outputs.device)
-        h_dir[:,:,1:,:] = torch.abs(outputs[:,:,1:,:] - outputs[:,:,:-1,:])
-        # print(h_dir)
-        total_dir = (h_dir + w_dir)**2
-        # print(total_dir)
-    return total_dir.mean()
+        n, _, h, w = outputs.shape
+        h_grad = torch.pow(outputs[:,:,1:,:] - outputs[:,:,:-1,:], 2).sum()
+        w_grad = torch.pow(outputs[:,:,:,1:] - outputs[:,:,:,:-1], 2).sum()
+
+        h_grad = h_grad/((h - 1)*w) + w_grad/((h)*(w - 1))
+    return (2*h_grad)/n
+            
+
 
 
 
