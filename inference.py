@@ -20,6 +20,7 @@ from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 import torchvision.transforms as transforms
+import argparse
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 def load(dir):
@@ -28,9 +29,17 @@ def load(dir):
     return model
 
 if __name__ == "__main__":
-    infer_dataset = 'data/train_test_split.json'
-    model_dir = 'models/enhancer_model_v_30.pth'
-    inference_output = 'D:\\spring2023\\748\\project\\inference_outputs\\full_run_30'
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--infer_dataset", type=str, default='data/train_test_split.json')
+    parser.add_argument("--model_dir", type=str, default = 'models/enhancer_model_v_10.pth')
+    parser.add_argument("--inference_output", type=str, default='inference_outputs/full_run/')
+
+    opt = parser.parse_args()
+
+    infer_dataset = opt.infer_dataset
+    model_dir = opt.model_dir
+    inference_output = opt.inference_output
     # files = glob.glob(infer_dataset + '/*.jpg')
     # dataloader = datasets.get_dataset(infer_dataset, 512, 1, 'train_test_split.json', 'test')
     model = load(model_dir)
@@ -53,20 +62,3 @@ if __name__ == "__main__":
             print('_'.join(img_file.split('\\')[-2:]))
             save_image(enhanced_img[0], os.path.join(inference_output, '_'.join(img_file.split('\\')[-2:])),normalize=True, range=(-1, 1))
             # i += 1
-    
-
-    # test_image = PIL.Image.open('D:\\spring2023\\748\\project\\data\\Dataset_Part1\\Dataset_Part1\\318\\1.JPG')
-    # test_image = PIL.Image.open('D:\\spring2023\\748\\project\\data\\Dataset_Part1\\Dataset_Part1\\271\\1.JPG')
-    # t = transforms.Compose(
-    #             [transforms.ToTensor(),
-    #             # transforms.Normalize([0.5], [0.5]),
-    #             transforms.Resize((512, 512), antialias=True)
-                
-    #             ]
-    #         )
-    # test_image = t(test_image).to(DEVICE)
-    # test_image = test_image.unsqueeze(0)
-    # print(test_image.shape)
-    # with torch.no_grad():
-    #     _, en_img = model(test_image)
-    #     save_image(en_img, 'output_{}.jpg'.format('v20_1'))

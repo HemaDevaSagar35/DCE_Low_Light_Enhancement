@@ -4,8 +4,10 @@ network/testing_model.ipynb
 metwork/.ipynb_checkpoints
 network/__pycache__
 TODO.txt
-data
+
 models
 testing the data.ipynb
 __pycache__
 *.jpg
+*.pdf
+*.zip
