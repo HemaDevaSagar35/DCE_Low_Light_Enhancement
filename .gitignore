@@ -5,7 +5,15 @@ metwork/.ipynb_checkpoints
 network/__pycache__
 TODO.txt
 
-models
+models/final
+models/logs
+models/enhancer_model_v_5.pth
+models/enhancer_model_v_30.pth
+models/enhancer_model_v_15.pth
+models/enhancer_model_v_20.pth
+models/enhancer_model_v_25.pth
+models/enhancer_model_final.pth
+
 testing the data.ipynb
 __pycache__
 *.jpg
