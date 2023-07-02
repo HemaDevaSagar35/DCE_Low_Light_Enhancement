@@ -22,13 +22,33 @@ It is very apparent that this equation is recursive. Meaning to obtain nth level
 needs ${n − 1}^{th}$ enhanced image and nth pixel level curve map. Now the goal in this work was to estimate the $A$′s,
 for which a deep learning architecture, called zero-reference DCE (DCE-Net), is used.\
 \
-**DCE-Net:**
-The models learns to map the input, typically a low light image, to its best
+**DCE-Net:** The models learns to map the input, typically a low light image, to its best
 fitting curve parameter map. The architecture is a plain CNN assemble of seven convolution layers
 with symmetrical concatenation. Each layer consists of 32 convolutional kernels of size 3 × 3 and
 stride 1 followed by ReLU activation. No down sampling or batch normalization is done since they
 break the relation among the neighbouring pixels. Below is the visual representation of the model
-architecture.
+architecture.\
+\
+![DCE Net](dce.png)\
+The model outputs 24 curve maps with which we treat the input through 8 iterations, higher order
+enhancement, to obtain the final version of the enhanced image. The advantage with this architecture
+is that it is very light weight with only 79, 416 trainable parameters and while training, we
+can resize the input to 256 x 256 or much lower if needed. And the resultant model can be used to
+enhance image of any size and not just 256 x 256.\
+\
+**Non-Reference Loss:** Training here is not supervised but rather un-supervised utilizing non-
+reference losses. There 4 such losses, which are combined during the back-propagation, that are used
+here. They are Spatial Consistency loss, Exposure Control Loss, Color Consistency Loss and Illumination
+Smootheness Loss. More information on them can be found in [[1]](https://openaccess.thecvf.com/content_CVPR_2020/papers/Guo_Zero-Reference_Deep_Curve_Estimation_for_Low-Light_Image_Enhancement_CVPR_2020_paper.pdf)\
+
+## Training and Results
+The dataset used for training the model is part1 of SICE dataset[2], which have 360 degree multi
+exposure sequence of images. There are 3022 in total. To impart the model with a wide range of
+dynamic range capability, this dataset is choosen, because it have both low-light and over-exposed
+images. The dataset is randomly divided into 2422 and 600 images for training and testing respectively\
+Below are some results from the trained model:\
+
+
 
 1) Training: Look for the training script train_model.py
 2) Inference: Look for the inferency script inference.py
@@ -37,6 +57,8 @@ architecture.
 5) Find the stable model under models
 
 References\
-[1] Guo, Chunle, et al. "Zero-reference deep curve estimation for low-light image enhancement." Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2020.\
-[2] \href{https://keras.io/examples/vision/zero_dce/}{https://keras.io/examples/vision/zero\_dce/}
+[1] [Guo, Chunle, et al. "Zero-reference deep curve estimation for low-light image enhancement." Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2020.](https://openaccess.thecvf.com/content_CVPR_2020/papers/Guo_Zero-Reference_Deep_Curve_Estimation_for_Low-Light_Image_Enhancement_CVPR_2020_paper.pdf)\
+[2] Jianrui Cai, Shuhang Gu, and Lei Zhang. Learning a deep single image contrast enhancer
+from multi-exposure image. IEEE Transactions on Image Processing, 27(4):2049–2026, 2018.\
+[3] [https://keras.io/examples/vision/zero_dce/](https://keras.io/examples/vision/zero\_dce/)
 
