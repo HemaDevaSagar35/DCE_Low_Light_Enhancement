@@ -39,22 +39,30 @@ enhance image of any size and not just 256 x 256.\
 **Non-Reference Loss:** Training here is not supervised but rather un-supervised utilizing non-
 reference losses. There 4 such losses, which are combined during the back-propagation, that are used
 here. They are Spatial Consistency loss, Exposure Control Loss, Color Consistency Loss and Illumination
-Smootheness Loss. More information on them can be found in [[1]](https://openaccess.thecvf.com/content_CVPR_2020/papers/Guo_Zero-Reference_Deep_Curve_Estimation_for_Low-Light_Image_Enhancement_CVPR_2020_paper.pdf)\
+Smootheness Loss. More information on them can be found in [[1]](https://openaccess.thecvf.com/content_CVPR_2020/papers/Guo_Zero-Reference_Deep_Curve_Estimation_for_Low-Light_Image_Enhancement_CVPR_2020_paper.pdf)
 
 ## Training and Results
 The dataset used for training the model is part1 of SICE dataset[2], which have 360 degree multi
 exposure sequence of images. There are 3022 in total. To impart the model with a wide range of
 dynamic range capability, this dataset is choosen, because it have both low-light and over-exposed
 images. The dataset is randomly divided into 2422 and 600 images for training and testing respectively\
-Below are some results from the trained model:\
+Below are some results from the trained model:
+
+| Input                                                 | Output                                        |
+| ----------------------------------------------------- | --------------------------------------------- |
+| <img src="example_1.JPG" width="256" height="256">    | <img src="35_1.JPG" width="256" height="256"> |
+| <img src="example_2.JPG" width="256" height="256">    | <img src="2_1.JPG" width="256" height="256"> |
+| <img src="example_3.JPG" width="256" height="256">    | <img src="121_2.JPG" width="256" height="256"> |
 
 
+## Code Details
 
 1) Training: Look for the training script train_model.py
 2) Inference: Look for the inferency script inference.py
 3) Most of these scripts can be run in other environments with few tweaks
 4) For the dataset refer to here https://drive.google.com/file/d/1HiLtYiyT9R7dR9DRTLRlUUrAicC4zzWN/view
 5) Find the stable model under models
+6) For more details on the results refer to HemaDevaSagarPotala_ProjectReport.pdf
 
 References\
 [1] [Guo, Chunle, et al. "Zero-reference deep curve estimation for low-light image enhancement." Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2020.](https://openaccess.thecvf.com/content_CVPR_2020/papers/Guo_Zero-Reference_Deep_Curve_Estimation_for_Low-Light_Image_Enhancement_CVPR_2020_paper.pdf)\
